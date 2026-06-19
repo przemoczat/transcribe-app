@@ -22,6 +22,7 @@ import threading
 import tempfile
 import subprocess
 from pathlib import Path
+from urllib.parse import unquote
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 # Make the sibling engine importable regardless of cwd.
@@ -182,7 +183,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def _do_file(self):
         length = int(self.headers.get("Content-Length", "0"))
-        fname = self.headers.get("X-Filename", "audio")
+        # The client percent-encodes the name so non-Latin-1 chars (e.g. Polish
+        # ą/ę/ł) survive the HTTP header, which is restricted to ISO-8859-1.
+        fname = unquote(self.headers.get("X-Filename", "audio"))
         suffix = os.path.splitext(fname)[1] or ".bin"
         data = self._read_body(length)
         tmpf = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
@@ -391,7 +394,8 @@ function startJob(job){
   }, 500);
 
   const req = job.type === 'file'
-    ? fetch('/transcribe', {method:'POST', body:job.file, headers:{'X-Filename':job.file.name}})
+    ? fetch('/transcribe', {method:'POST', body:job.file,
+                            headers:{'X-Filename':encodeURIComponent(job.file.name)}})
     : fetch('/transcribe_url', {method:'POST', body:JSON.stringify({url:job.url}),
                                 headers:{'Content-Type':'application/json'}});
 

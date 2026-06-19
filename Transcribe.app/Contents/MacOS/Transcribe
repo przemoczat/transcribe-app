@@ -1,0 +1,6 @@
+#!/bin/bash
+# Launches the Transcribe drag-and-drop server (which opens the Chrome app window).
+# Dock-launched apps get a bare PATH, so add Homebrew bin for ffmpeg/ffprobe/yt-dlp.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+exec /opt/homebrew/bin/python3 "$HOME/skills/transcribe-skill/transcribe_server.py" \
+  >/tmp/transcribe_app.log 2>&1

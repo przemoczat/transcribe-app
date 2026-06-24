@@ -12,6 +12,7 @@ case it's useful to you too.
 - Transcribes **local audio and video** files (ffmpeg strips the audio automatically).
 - Transcribes from **links**: YouTube, Instagram, TikTok, Vimeo, a direct MP4 — anything
   yt-dlp supports. Uses existing captions when available, otherwise downloads and transcribes.
+- **Record a voice memo** right in the app — click record, talk, stop, get the transcript.
 - Output as plain text or with `[mm:ss]` timestamps, one click to copy or save a `.txt`.
 - Drop several files at once — each runs as its own card with a live timer.
 - Auto-detects the language (Polish, English, and many more). Powered by Whisper large-v3.

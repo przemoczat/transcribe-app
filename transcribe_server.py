@@ -255,74 +255,138 @@ HTML = r"""<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Transcribe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
 <style>
-  :root { --bg:#0f1115; --panel:#181b22; --line:#262b35; --accent:#4f8cff;
-          --text:#e7ebf2; --muted:#8b93a3; --ok:#3ecf8e; --err:#ff7676; }
+  /* dabrowskimedia.pl identity — charcoal, one terracotta accent, editorial serif */
+  :root { --bg:#141414; --panel:#1a1a1a; --ink:#f2f0ec; --ink-dim:#a8a5a0;
+          --ink-faint:#6b6965; --accent:#e85d2f; --err:#e8896f;
+          --line:rgba(242,240,236,0.12); --line-strong:rgba(242,240,236,0.25);
+          --grid:rgba(242,240,236,0.022);
+          --font-display:'Cormorant Garamond',Georgia,serif;
+          --font-body:'Montserrat',system-ui,sans-serif;
+          --font-mono:ui-monospace,'SF Mono',Menlo,monospace;
+          --ease:cubic-bezier(0.16,1,0.3,1); }
   * { box-sizing:border-box; }
+  .hidden { display:none; }
   html,body { height:100%; margin:0; }
-  body { background:var(--bg); color:var(--text);
-         font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+  body { background-color:var(--bg); color:var(--ink);
+         background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                          linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+         background-size:60px 60px;
+         font:400 14px/1.55 var(--font-body);
          display:flex; flex-direction:column; -webkit-user-select:none; user-select:none; }
-  header { padding:13px 18px; border-bottom:1px solid var(--line);
-           display:flex; align-items:center; gap:10px; flex:0 0 auto; }
-  header h1 { font-size:15px; margin:0; font-weight:600; letter-spacing:.2px; }
-  header .dot { width:9px; height:9px; border-radius:50%; background:var(--ok); }
-  main { flex:1; min-height:0; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:14px; }
 
-  #drop { border:2px dashed var(--line); border-radius:14px; padding:22px;
+  header { padding:20px 22px 18px; border-bottom:1px solid var(--line); flex:0 0 auto; }
+  header .eyebrow { font:500 11px/1 var(--font-mono); letter-spacing:.18em;
+                    text-transform:uppercase; color:var(--accent); }
+  header h1 { margin:6px 0 0; font:500 30px/1 var(--font-display);
+              letter-spacing:.01em; color:var(--ink); }
+  main { flex:1; min-height:0; overflow-y:auto; padding:22px;
+         display:flex; flex-direction:column; gap:20px; }
+
+  #drop { border:1px dashed var(--line-strong); border-radius:2px; padding:30px 22px;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
-          gap:7px; text-align:center; color:var(--muted); cursor:pointer; min-height:140px;
-          transition:border-color .15s, background .15s; }
-  #drop.hover { border-color:var(--accent); background:rgba(79,140,255,.07); color:var(--text); }
-  #drop .big { font-size:30px; opacity:.85; }
-  #drop .sub { font-size:12px; }
+          gap:10px; text-align:center; color:var(--ink-dim); cursor:pointer; min-height:158px;
+          transition:border-color var(--dur,.3s) var(--ease), background var(--dur,.3s) var(--ease),
+                     color var(--dur,.3s) var(--ease); }
+  #drop:hover, #drop.hover { border-color:var(--accent); color:var(--ink);
+          background:rgba(232,93,47,.05); }
+  #drop .drop-icon { color:var(--ink-faint); transition:color .3s var(--ease); }
+  #drop:hover .drop-icon, #drop.hover .drop-icon { color:var(--accent); }
+  #drop .drop-main { font:500 16px/1.2 var(--font-body); color:var(--ink); }
+  #drop .sub { font:400 12px/1.5 var(--font-body); color:var(--ink-faint); max-width:34ch; }
 
-  .urlrow { display:flex; flex-direction:column; gap:8px; }
-  #urls { width:100%; min-height:56px; resize:vertical; background:var(--panel);
-          color:var(--text); border:1px solid var(--line); border-radius:11px; padding:11px 12px;
-          font:13px/1.5 -apple-system,sans-serif; -webkit-user-select:text; user-select:text; }
-  #urls::placeholder { color:var(--muted); }
-  .urlrow .actions { display:flex; align-items:center; gap:10px; }
-  .urlrow .hint { color:var(--muted); font-size:11px; margin-left:auto; }
+  /* hairline "or" divider between the primary drop zone and the link/record inputs */
+  .rule { display:flex; align-items:center; gap:14px; color:var(--ink-faint);
+          font:500 11px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; }
+  .rule::before, .rule::after { content:""; flex:1; height:1px; background:var(--line); }
 
-  #results { display:flex; flex-direction:column; gap:12px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; }
-  .card.error { border-color:rgba(255,118,118,.4); }
-  .toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:9px; }
-  .toolbar .title { font-weight:600; margin-right:auto; overflow:hidden;
-                    text-overflow:ellipsis; white-space:nowrap; max-width:46%; }
-  .working-row { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; }
-  .note { color:var(--muted); font-size:12px; }
-  .spinner { width:16px; height:16px; border:3px solid var(--line);
+  .urlrow { display:flex; flex-direction:column; gap:11px; }
+  #urls { width:100%; min-height:58px; resize:vertical; background:var(--panel);
+          color:var(--ink); border:1px solid var(--line-strong); border-radius:2px; padding:12px 13px;
+          font:400 13px/1.55 var(--font-body); -webkit-user-select:text; user-select:text;
+          transition:border-color .3s var(--ease); }
+  #urls:hover { border-color:var(--ink-dim); }
+  #urls:focus { outline:none; border-color:var(--accent); }
+  #urls::placeholder { color:var(--ink-faint); }
+  .urlrow .actions { display:flex; align-items:center; gap:12px; }
+  .urlrow .hint { font:400 11px/1 var(--font-mono); letter-spacing:.04em;
+                  color:var(--ink-faint); margin-left:auto; }
+
+  .recrow { display:flex; }
+  #rec { display:inline-flex; align-items:center; gap:9px; }
+  #rec::before { content:""; width:8px; height:8px; border-radius:50%;
+                 background:var(--accent); flex:0 0 auto; }
+  #rec.recording { background:var(--accent); border-color:var(--accent); color:var(--bg);
+                   font-weight:600; }
+  #rec.recording::before { background:var(--bg); animation:pulse 1.1s var(--ease) infinite; }
+  @keyframes pulse { 50% { opacity:.2; } }
+
+  #results { display:flex; flex-direction:column; gap:14px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:2px; padding:15px; }
+  .card.error { border-color:rgba(232,93,47,.45); }
+  .toolbar { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:12px; }
+  .toolbar .title { font:500 14px/1.3 var(--font-body); color:var(--ink); margin-right:auto;
+                    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:46%; }
+  .working-row { display:flex; align-items:center; gap:9px;
+                 font:400 12px/1 var(--font-mono); color:var(--ink-dim); }
+  .note { font:400 12px/1.5 var(--font-body); color:var(--ink-dim); }
+  .spinner { width:15px; height:15px; border:2px solid var(--line-strong);
              border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; flex:0 0 auto; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  textarea.out { width:100%; height:200px; resize:vertical; background:var(--bg);
-             color:var(--text); border:1px solid var(--line); border-radius:10px; padding:12px;
-             font:13px/1.6 "SF Mono",ui-monospace,Menlo,monospace;
+  textarea.out { width:100%; height:210px; resize:vertical; background:var(--bg);
+             color:var(--ink); border:1px solid var(--line); border-radius:2px; padding:13px;
+             font:400 13px/1.65 var(--font-mono);
              -webkit-user-select:text; user-select:text; }
-  .errmsg { color:var(--err); font:12px/1.5 "SF Mono",ui-monospace,monospace; word-break:break-word; }
-  .erractions { margin-top:10px; }
-  button { background:var(--panel); color:var(--text); border:1px solid var(--line);
-           padding:8px 14px; border-radius:9px; font-size:13px; cursor:pointer; }
-  button:hover { border-color:var(--accent); }
-  button:disabled { opacity:.6; cursor:default; }
-  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
-  button.copied { background:var(--ok); border-color:var(--ok); color:#06251a; }
-  .switch { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12px;
-            border:1px solid var(--line); padding:7px 11px; border-radius:9px; cursor:pointer; }
+  textarea.out:focus { outline:none; border-color:var(--line-strong); }
+  .errmsg { color:var(--err); font:400 12px/1.55 var(--font-mono); word-break:break-word; }
+  .erractions { margin-top:12px; }
+
+  button { min-height:38px; background:transparent; color:var(--ink);
+           border:1px solid var(--line-strong); border-radius:2px; padding:8px 16px;
+           font:500 13px/1 var(--font-body); cursor:pointer;
+           transition:color .3s var(--ease), border-color .3s var(--ease), background .3s var(--ease); }
+  button:hover { color:var(--accent); border-color:var(--accent); }
+  button:active { transform:translateY(1px); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:var(--bg); font-weight:600; }
+  button.primary:hover { background:var(--ink); border-color:var(--ink); color:var(--bg); }
+  button.copied, button.copied:hover { background:var(--accent); border-color:var(--accent);
+                  color:var(--bg); }
+  .switch { display:flex; align-items:center; gap:8px; font:400 12px/1 var(--font-mono);
+            color:var(--ink-dim); border:1px solid var(--line-strong); padding:8px 12px;
+            border-radius:2px; cursor:pointer; }
   .switch input { accent-color:var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation:none; }
+    #rec.recording::before { animation:none; }
+    * { transition:none !important; }
+  }
 </style>
 </head>
 <body>
-<header><span class="dot"></span><h1>Transcribe</h1></header>
+<header>
+  <span class="eyebrow">Dabrowski Media</span>
+  <h1>Transcribe</h1>
+</header>
 <main>
   <div id="drop">
-    <div class="big">⤓</div>
-    <div>Drop audio or video files here</div>
-    <div class="sub">or click to choose · multiple at once · keep dropping while others run</div>
+    <svg class="drop-icon" width="32" height="32" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.25" stroke-linecap="round"
+         stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/>
+    </svg>
+    <div class="drop-main">Drop audio or video</div>
+    <div class="sub">or click to choose — several at once, keep dropping while others run</div>
     <input id="file" type="file" class="hidden" multiple
            accept="audio/*,video/*,.mp3,.m4a,.wav,.mp4,.mov,.aac,.flac,.ogg,.webm,.mkv">
   </div>
+
+  <div class="rule">or</div>
 
   <div class="urlrow">
     <textarea id="urls" placeholder="…or paste links — YouTube, Instagram, TikTok, direct mp4 — one per line"></textarea>
@@ -330,6 +394,10 @@ HTML = r"""<!DOCTYPE html>
       <button id="go" class="primary">Transcribe links</button>
       <span class="hint">⌘↵ to transcribe</span>
     </div>
+  </div>
+
+  <div class="recrow">
+    <button id="rec">● Record voice memo</button>
   </div>
 
   <div id="results"></div>
@@ -477,6 +545,76 @@ async function updateAndRetry(card, job, btn, msg){
     btn.disabled = false; btn.textContent = 'Update yt-dlp & retry';
   }
 }
+
+// ---- voice memo recording (reuses the file-transcription path) ----
+const recBtn = document.getElementById('rec');
+let mediaRecorder = null, recChunks = [], recTimer = null, recT0 = 0;
+
+// Hide the button if the browser can't record (older engines / no mic API).
+if (!('MediaRecorder' in window) || !navigator.mediaDevices?.getUserMedia) {
+  recBtn.style.display = 'none';
+}
+
+function pickMime(){
+  const opts = ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+  for (const m of opts) if (MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+
+function recError(text){
+  const card = document.createElement('div');
+  card.className = 'card';
+  results.prepend(card);
+  finishCard(card, {ok:false, error:text}, {type:'file', name:'Voice memo'});
+}
+
+async function startRecording(){
+  recBtn.disabled = true;
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  } catch(e){
+    recBtn.disabled = false;
+    recError('Microphone access denied — enable it in the browser’s site settings, then try again.');
+    return;
+  }
+  const mime = pickMime();
+  mediaRecorder = new MediaRecorder(stream, mime ? {mimeType:mime} : undefined);
+  recChunks = [];
+  mediaRecorder.ondataavailable = ev => { if (ev.data && ev.data.size) recChunks.push(ev.data); };
+  mediaRecorder.onstop = () => {
+    stream.getTracks().forEach(t => t.stop());
+    const type = mediaRecorder.mimeType || mime || 'audio/webm';
+    const ext = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+    const blob = new Blob(recChunks, {type});
+    if (!blob.size) return;  // nothing captured — stay quiet
+    const n = new Date(), p = x => String(x).padStart(2,'0');
+    const name = `voice-memo-${p(n.getHours())}-${p(n.getMinutes())}-${p(n.getSeconds())}.${ext}`;
+    startJob({type:'file', file:new File([blob], name, {type}), name});
+  };
+  mediaRecorder.start();
+  recBtn.disabled = false;
+  recBtn.classList.add('recording');
+  recT0 = Date.now();
+  const tick = () => {
+    const s = Math.floor((Date.now()-recT0)/1000);
+    recBtn.textContent = 'Stop · ' + Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  };
+  tick();
+  recTimer = setInterval(tick, 500);
+}
+
+function stopRecording(){
+  clearInterval(recTimer);
+  recBtn.classList.remove('recording');
+  recBtn.textContent = '● Record voice memo';
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+recBtn.addEventListener('click', () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
+  else startRecording();
+});
 
 // ---- tell the server to exit when the window closes ----
 window.addEventListener('pagehide', () => { navigator.sendBeacon('/shutdown'); });

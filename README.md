@@ -26,14 +26,21 @@ case it's useful to you too.
 
 ## Install
 
+**The easy way:** [download the repo as a ZIP](https://github.com/przemoczat/transcribe-app/archive/refs/heads/main.zip),
+unzip it, then double-click **`Install Transcribe.command`**. It opens Terminal and installs
+everything. (First time: if macOS blocks it, right-click the file → **Open**.)
+
+**Or from the terminal:**
+
 ```bash
 git clone https://github.com/przemoczat/transcribe-app.git
 cd transcribe-app
 ./install.sh
 ```
 
-The installer adds `ffmpeg`, `yt-dlp` and `mlx-whisper`, copies the engine scripts to
-`~/skills/transcribe-skill/` and installs `Transcribe.app` to `~/Applications/`.
+Either way, the installer adds `ffmpeg`, `yt-dlp` and `mlx-whisper`, copies the engine scripts
+to `~/skills/transcribe-skill/` and installs `Transcribe.app` to `~/Applications/`. You need
+[Homebrew](https://brew.sh) installed first — the installer will tell you if it's missing.
 
 First launch: right-click the app and choose **Open** (it's not notarized, so macOS asks once).
 Then drag it to your Dock. The first transcription downloads the Whisper large-v3 model
